@@ -8,24 +8,24 @@ contract Escrow {
 
     using ECDSA for bytes32;
 
-    mapping(address => Deposite) deposits;
+    mapping(address => Deposit) public deposits;
 
-    struct Deposite{
+    struct Deposit{
         uint256 amount;
         bytes32 hashedBeneficiary;
         address ERC20Address;
     }
 
-    function deposite(bytes32 hashedBeneficiaryAddress)  external payable {
-        deposits[msg.sender] = Deposite({
+    function deposit(bytes32 hashedBeneficiaryAddress)  external payable {
+        deposits[msg.sender] = Deposit({
             amount: msg.value,
             hashedBeneficiary: hashedBeneficiaryAddress,
             ERC20Address: address(0)
         });
     }
 
-    function depositeERC20(bytes32 hashedBeneficiaryAddress, address erc20Address, uint256 value) external {
-        deposits[msg.sender] = Deposite({
+    function depositERC20(bytes32 hashedBeneficiaryAddress, address erc20Address, uint256 value) external {
+        deposits[msg.sender] = Deposit({
             amount: value,
             hashedBeneficiary: hashedBeneficiaryAddress,
             ERC20Address: erc20Address
@@ -33,7 +33,7 @@ contract Escrow {
     }
 
     function releaseFunds(address depositer, address beneficiary, bytes32 msghash, bytes memory signature) external  {
-        Deposite memory depo = deposits[depositer];
+        Deposit memory depo = deposits[depositer];
 
         validation(depo.hashedBeneficiary, beneficiary, msghash, signature);
 
