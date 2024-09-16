@@ -32,40 +32,31 @@ contract Escrow {
         });
     }
 
-    function releaseFunds(address depositer, address beneficiary, bytes32 msghash, bytes memory signature) external  {
+    function releaseFunds(address depositer, address beneficiary, address to, bytes memory signature) external  {
+        bytes32 msgHash = keccak256(abi.encodePacked(to));
         Deposit memory depo = deposits[depositer];
-
-        validation(depo.hashedBeneficiary, beneficiary, msghash, signature);
+        validation(depo.hashedBeneficiary, beneficiary, msgHash, signature);
 
         if (depo.ERC20Address != address(0)) {
             IERC20 token = IERC20(depo.ERC20Address);
-            token.transfer(beneficiary, depo.amount);
+            token.transfer(to, depo.amount);
         }
         else{
-            payable(beneficiary).transfer(depo.amount);
+            payable(to).transfer(depo.amount);
         }
         delete deposits[depositer];
     }
 
-    function validation(bytes32 hashedBeneficiary, address beneficiary, bytes32 msghash, bytes memory signature)  internal pure{
+    function validation(bytes32 hashedBeneficiary, address beneficiary, bytes32 msgHash, bytes memory signature)  internal pure{
 
         bytes32 beneficiaryHash = keccak256(abi.encodePacked(beneficiary));
         require(hashedBeneficiary == beneficiaryHash, "Invalid Beneficiar address");
 
-        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msghash));
+        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
         address signer = ethSignedMessageHash.recover(signature);
         require(signer == beneficiary, "Invalid signature");
     }
 
 }
 
-/*
-Your task is to implement an escrow contract in Solidity.
-
-1. Two roles are interacting with the smart contract: depositor and beneficiary. The depositor sends an arbitrary ERC20 or ETH to the smart contract and provides information about the beneficiary address which can release the funds. The beneficiary address should remain hidden until the funds are released. Hashing the address is enough.
-
-2. The beneficiary signs the release funds order off-chain and any address can submit it to the chain. The funds should be released to the address provided by the beneficiary.
-
-3. The escrow contract should handle multiple depositors and beneficiaries. There is always only one beneficiary for the given deposit.
-*/
 
