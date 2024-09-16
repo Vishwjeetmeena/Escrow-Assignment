@@ -50,14 +50,10 @@ describe("Escrow", function () {
       value: depositAmount,
     });
 
-    // get the msg hash
+    //message hash
     const msgHash = ethers.solidityPackedKeccak256(
       ["address"],
       [other.address]
-    );
-    const ethSignedMessageHash = ethers.solidityPackedKeccak256(
-      ["string", "bytes32"],
-      ["\x19Ethereum Signed Message:\n32", msgHash]
     );
 
     // Sign the message hash
@@ -73,4 +69,43 @@ describe("Escrow", function () {
       )
     ).to.changeEtherBalance(other, depositAmount);
   });
+
+  it("Should Deposit ERC20 Token funds and release the funds to the address provided by the beneficiary with a valid signature ", async function () {
+    const { owner, depositor, beneficiary, Escrow, other } = await deployTokenFixture();
+
+    //Deploying ERC20Token
+    const ERC20Factory = await ethers.getContractFactory("ERC20Token");
+    const ERC20 = await ERC20Factory.deploy(owner.address);
+    await ERC20.waitForDeployment();
+
+    //minting 1000 token in depositor address
+    await ERC20.mint(depositor.address, 1000);
+
+    //Depositing ERC20 Funds
+    const hashedBeneficiaryAddress = ethers.solidityPackedKeccak256(
+      ["address"],
+      [beneficiary.address]
+    );
+    await Escrow.connect(depositor).depositERC20( hashedBeneficiaryAddress, ERC20.target, 100);
+
+    //Approving Escrow contract to spend token on behalf of depositor
+    await ERC20.connect(depositor).approve(Escrow.target, 100);
+
+    const deposit = await Escrow.deposits(depositor.address);
+    expect(deposit.amount).to.equal(100);
+    expect(deposit.hashedBeneficiary).to.equal(hashedBeneficiaryAddress);
+    expect(deposit.ERC20Address).to.equal(ERC20.target);
+
+    //Releasing Funds
+    const msgHash = ethers.solidityPackedKeccak256(
+      ["address"],
+      [other.address]
+    );
+    const signature = await beneficiary.signMessage(ethers.toBeArray(msgHash));
+    await Escrow.releaseFunds(depositor.address, beneficiary.address, other.address, signature);
+
+    expect(await ERC20.balanceOf(other.address)).to.be.equal(100n);
+
+  })
+
 });

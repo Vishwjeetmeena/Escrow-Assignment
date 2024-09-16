@@ -39,7 +39,7 @@ contract Escrow {
 
         if (depo.ERC20Address != address(0)) {
             IERC20 token = IERC20(depo.ERC20Address);
-            token.transfer(to, depo.amount);
+            token.transferFrom(depositer, to, depo.amount);
         }
         else{
             payable(to).transfer(depo.amount);
