@@ -54,6 +54,6 @@ Ensure you have the following installed:
 
 ## Usage
 
-- for [Testing] visit (https://hardhat.org/hardhat-runner/docs/guides/test-contracts) 
-- for [Deplyoment] and [Verification] visit (https://hardhat.org/hardhat-runner/docs/guides/verifying)
+- for Testing visit (https://hardhat.org/hardhat-runner/docs/guides/test-contracts) 
+- for Deplyoment and Verification visit (https://hardhat.org/hardhat-runner/docs/guides/verifying)
 
