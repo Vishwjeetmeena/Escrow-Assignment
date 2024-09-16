@@ -71,7 +71,8 @@ describe("Escrow", function () {
   });
 
   it("Should Deposit ERC20 Token funds and release the funds to the address provided by the beneficiary with a valid signature ", async function () {
-    const { owner, depositor, beneficiary, Escrow, other } = await deployTokenFixture();
+    const { owner, depositor, beneficiary, Escrow, other } =
+      await deployTokenFixture();
 
     //Deploying ERC20Token
     const ERC20Factory = await ethers.getContractFactory("ERC20Token");
@@ -86,7 +87,11 @@ describe("Escrow", function () {
       ["address"],
       [beneficiary.address]
     );
-    await Escrow.connect(depositor).depositERC20( hashedBeneficiaryAddress, ERC20.target, 100);
+    await Escrow.connect(depositor).depositERC20(
+      hashedBeneficiaryAddress,
+      ERC20.target,
+      100
+    );
 
     //Approving Escrow contract to spend token on behalf of depositor
     await ERC20.connect(depositor).approve(Escrow.target, 100);
@@ -102,25 +107,50 @@ describe("Escrow", function () {
       [other.address]
     );
     const signature = await beneficiary.signMessage(ethers.toBeArray(msgHash));
-    await Escrow.releaseFunds(depositor.address, beneficiary.address, other.address, signature);
+    await Escrow.releaseFunds(
+      depositor.address,
+      beneficiary.address,
+      other.address,
+      signature
+    );
 
     expect(await ERC20.balanceOf(other.address)).to.be.equal(100n);
-
-  })
+  });
 
   it("Should revert when invalid beneficiary or signature is provided", async function () {
-    const { owner, depositor, beneficiary, Escrow, other } = await deployTokenFixture();
-    const hashedBeneficiaryAddress = ethers.solidityPackedKeccak256(["address"],[beneficiary.address]);
-    await Escrow.connect(depositor).deposit(hashedBeneficiaryAddress, {value: 100});
-    const msgHash = ethers.solidityPackedKeccak256(["address"],[other.address]);
+    const { owner, depositor, beneficiary, Escrow, other } =
+      await deployTokenFixture();
+    const hashedBeneficiaryAddress = ethers.solidityPackedKeccak256(
+      ["address"],
+      [beneficiary.address]
+    );
+    await Escrow.connect(depositor).deposit(hashedBeneficiaryAddress, {
+      value: 100,
+    });
+    const msgHash = ethers.solidityPackedKeccak256(
+      ["address"],
+      [other.address]
+    );
     const signature = await beneficiary.signMessage(ethers.toBeArray(msgHash));
 
     //Invalid Beneficiary
-    await expect(Escrow.releaseFunds(depositor.address, owner.address, other.address, signature)).to.be.revertedWithCustomError(Escrow, "InvalidBeneficiary");
+    await expect(
+      Escrow.releaseFunds(
+        depositor.address,
+        owner.address,
+        other.address,
+        signature
+      )
+    ).to.be.revertedWithCustomError(Escrow, "InvalidBeneficiary");
 
     //Invalid signature
-    await expect(Escrow.releaseFunds(depositor.address, beneficiary.address, owner.address, signature)).to.be.revertedWithCustomError(Escrow, "InvalidSignature");
-    
-  })
-
+    await expect(
+      Escrow.releaseFunds(
+        depositor.address,
+        beneficiary.address,
+        owner.address,
+        signature
+      )
+    ).to.be.revertedWithCustomError(Escrow, "InvalidSignature");
+  });
 });
