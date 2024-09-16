@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/vishwjeetmeena/Desktop/Training/Blockchain/Escrow_Contract-Assignmnet/contracts/Escrow.sol": {
-      "lastModificationDate": 1726482730149,
-      "contentHash": "4ca40e477f707d5515eb5c4438322ffd",
+      "lastModificationDate": 1726487872900,
+      "contentHash": "c47a6a9713e56c84fe86b7dbaee8dcae",
       "sourceName": "contracts/Escrow.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -26,9 +26,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -104,9 +101,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -143,9 +137,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -158,8 +149,8 @@
       ]
     },
     "/Users/vishwjeetmeena/Desktop/Training/Blockchain/Escrow_Contract-Assignmnet/contracts/ERC20Token.sol": {
-      "lastModificationDate": 1726479783258,
-      "contentHash": "bdf983f4554161c4c7c8d992982b440a",
+      "lastModificationDate": 1726485369302,
+      "contentHash": "92f13b599a96aa2357b358fd17249c38",
       "sourceName": "contracts/ERC20Token.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -182,9 +173,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -193,7 +181,7 @@
         "@openzeppelin/contracts/access/Ownable.sol"
       ],
       "versionPragmas": [
-        "^0.8.20"
+        "^0.8.24"
       ],
       "artifacts": [
         "ERC20Token"
@@ -224,9 +212,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -265,9 +250,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -309,9 +291,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -348,9 +327,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
@@ -389,9 +365,6 @@
                 "ast"
               ]
             }
-          },
-          "metadata": {
-            "useLiteralContent": false
           }
         }
       },
