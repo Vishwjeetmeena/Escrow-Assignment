@@ -16,12 +16,20 @@ contract Escrow {
         address ERC20Address;
     }
 
+    event Depositied(address indexed depositer, bytes32 indexed beneficiary);
+    event Released(address indexed depositer, address indexed beneficiary, address indexed to);
+
+    error InvalidBeneficiary();
+    error InvalidSignature();
+
     function deposit(bytes32 hashedBeneficiaryAddress)  external payable {
         deposits[msg.sender] = Deposit({
             amount: msg.value,
             hashedBeneficiary: hashedBeneficiaryAddress,
             ERC20Address: address(0)
         });
+
+        emit Depositied(msg.sender, hashedBeneficiaryAddress);
     }
 
     function depositERC20(bytes32 hashedBeneficiaryAddress, address erc20Address, uint256 value) external {
@@ -30,6 +38,8 @@ contract Escrow {
             hashedBeneficiary: hashedBeneficiaryAddress,
             ERC20Address: erc20Address
         });
+
+        emit Depositied(msg.sender, hashedBeneficiaryAddress);
     }
 
     function releaseFunds(address depositer, address beneficiary, address to, bytes memory signature) external  {
@@ -45,16 +55,21 @@ contract Escrow {
             payable(to).transfer(depo.amount);
         }
         delete deposits[depositer];
+        emit Released(depositer, beneficiary, to);
     }
 
     function validation(bytes32 hashedBeneficiary, address beneficiary, bytes32 msgHash, bytes memory signature)  internal pure{
 
         bytes32 beneficiaryHash = keccak256(abi.encodePacked(beneficiary));
-        require(hashedBeneficiary == beneficiaryHash, "Invalid Beneficiar address");
+        if (hashedBeneficiary != beneficiaryHash) {
+            revert InvalidBeneficiary();
+        }
 
         bytes32 ethSignedMessageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", msgHash));
         address signer = ethSignedMessageHash.recover(signature);
-        require(signer == beneficiary, "Invalid signature");
+        if (signer != beneficiary) {
+            revert InvalidSignature();
+        }
     }
 
 }
