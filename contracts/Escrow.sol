@@ -12,7 +12,8 @@ contract Escrow {
     using ECDSA for bytes32;
 
     ///@notice Stores deposits for each depositor
-    mapping(address => Deposit) public deposits;
+    mapping(address => Deposit) public depositedFunds;
+    mapping(address => Release) public releasedFunds;
 
     ///@dev Represents a deposit with amount, hashed beneficiary, and optional ERC20 token address
     struct Deposit {
@@ -21,12 +22,23 @@ contract Escrow {
         address ERC20Address;
     }
 
+    ///@dev Represents a Realsed funds with amount, beneficiary address, and optional ERC20 token address
+    struct Release {
+        uint256 amount;
+        address beneficiary;
+        address ERC20Address;
+    }
+
     /**
      * @dev Emitted when a deposit is made.
      * @param depositer The address of the depositor.
      * @param beneficiary The hashed address of the beneficiary.
      */
-    event Deposited(address indexed depositer, bytes32 indexed beneficiary);
+    event Deposited(
+        address indexed depositer,
+        bytes32 indexed beneficiary,
+        address indexed ERC20
+    );
 
     /**
      * @dev Emitted when funds are released.
@@ -47,37 +59,33 @@ contract Escrow {
     error InvalidSignature();
 
     /**
-     * @notice Deposits ETH to the contract with a hashed beneficiary address.
+     * @notice Deposits ETH or ERC20 tokens to the contract with a hashed beneficiary address.
      * @param hashedBeneficiaryAddress The hashed address of the beneficiary.
-     */
-    function deposit(bytes32 hashedBeneficiaryAddress) external payable {
-        deposits[msg.sender] = Deposit({
-            amount: msg.value,
-            hashedBeneficiary: hashedBeneficiaryAddress,
-            ERC20Address: address(0)
-        });
-
-        emit Deposited(msg.sender, hashedBeneficiaryAddress);
-    }
-
-    /**
-     * @notice Deposits ERC20 tokens to the contract with a hashed beneficiary address.
-     * @param hashedBeneficiaryAddress The hashed address of the beneficiary.
-     * @param erc20Address The address of the ERC20 token contract.
+     * @param erc20Address The address of the ERC20 token contract in case of ETH it will be zero address.
      * @param value The amount of tokens to deposit.
      */
-    function depositERC20(
+
+    function deposit(
         bytes32 hashedBeneficiaryAddress,
         address erc20Address,
         uint256 value
-    ) external {
-        deposits[msg.sender] = Deposit({
-            amount: value,
-            hashedBeneficiary: hashedBeneficiaryAddress,
-            ERC20Address: erc20Address
-        });
-
-        emit Deposited(msg.sender, hashedBeneficiaryAddress);
+    ) external payable {
+        if (erc20Address == address(0)) {
+            depositedFunds[msg.sender] = Deposit({
+                amount: msg.value,
+                hashedBeneficiary: hashedBeneficiaryAddress,
+                ERC20Address: address(0)
+            });
+        } else {
+            depositedFunds[msg.sender] = Deposit({
+                amount: value,
+                hashedBeneficiary: hashedBeneficiaryAddress,
+                ERC20Address: erc20Address
+            });
+            IERC20 token = IERC20(erc20Address);
+            token.transferFrom(msg.sender, address(this), value);
+        }
+        emit Deposited(msg.sender, hashedBeneficiaryAddress, erc20Address);
     }
 
     /**
@@ -94,17 +102,26 @@ contract Escrow {
         bytes memory signature
     ) external {
         bytes32 msgHash = keccak256(abi.encodePacked(to));
-        Deposit memory depo = deposits[depositer];
-        _validate(depo.hashedBeneficiary, beneficiary, msgHash, signature);
+        Deposit memory _depositer = depositedFunds[depositer];
+        _validate(
+            _depositer.hashedBeneficiary,
+            beneficiary,
+            msgHash,
+            signature
+        );
 
-        if (depo.ERC20Address != address(0)) {
-            IERC20 token = IERC20(depo.ERC20Address);
-            token.transferFrom(depositer, to, depo.amount);
+        if (_depositer.ERC20Address != address(0)) {
+            IERC20 token = IERC20(_depositer.ERC20Address);
+            token.transfer(to, _depositer.amount);
         } else {
-            payable(to).transfer(depo.amount);
+            payable(to).transfer(_depositer.amount);
         }
-
-        delete deposits[depositer];
+        releasedFunds[depositer] = Release({
+            amount: _depositer.amount,
+            beneficiary: beneficiary,
+            ERC20Address: _depositer.ERC20Address
+        });
+        delete depositedFunds[depositer];
         emit Released(depositer, beneficiary, to);
     }
 
